@@ -1,36 +1,78 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import DashboardLayout from './components/Layout/DashboardLayout';
+import DashboardPage from './pages/DashboardPage';
+import CasesPage from './pages/CasesPage';
+import VeterinariansPage from './pages/VeterinariansPage';
+import FarmersPage from './pages/FarmersPage';
+import LivestockPage from './pages/LivestockPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogin = (userData, token) => {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userData', JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-green-600 text-white p-6">
-        <h1 className="text-2xl font-bold">AnimalGuardian Dashboard</h1>
-        <p className="text-green-100">Digital Livestock Support System</p>
-      </div>
-      <div className="p-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Dashboard</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-green-800">Total Cases</h3>
-              <p className="text-2xl font-bold text-green-600">156</p>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-blue-800">Active Vets</h3>
-              <p className="text-2xl font-bold text-blue-600">12</p>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-yellow-800">Farmers</h3>
-              <p className="text-2xl font-bold text-yellow-600">248</p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-red-800">Pending Cases</h3>
-              <p className="text-2xl font-bold text-red-600">8</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <LoginPage onLogin={handleLogin} />
+            )
+          }
+        />
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <DashboardLayout user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="cases" element={<CasesPage />} />
+          <Route path="veterinarians" element={<VeterinariansPage />} />
+          <Route path="farmers" element={<FarmersPage />} />
+          <Route path="livestock" element={<LivestockPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 
